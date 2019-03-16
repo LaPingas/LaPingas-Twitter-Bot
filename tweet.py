@@ -25,7 +25,8 @@ def setup_current_time():
     hour = current_time[:2]
     minute = current_time[3:5]
     second = current_time[6:8]
-    return [hour, minute, second]
+    current_time = [hour, minute, second]
+    return current_time
 
 def is_new_hour(current_time):
     """
@@ -33,7 +34,7 @@ def is_new_hour(current_time):
     :param current_time: Represent the current time
     :type current_time: List
     """
-    return True if current_time[1] == 0 and current_time[2] == 0 else False
+    return True if current_time[1] == "00" and current_time[2] == "00" else False
 
 def tweet(api):
     """
@@ -44,8 +45,9 @@ def tweet(api):
     while True:
         if is_new_hour(setup_current_time()):
             random_number = randint(1, 1001)
-            print("{0}:00 - {1}".format(setup_current_time()[0], random_number))
+            print("{0}:{1} - {2}".format(setup_current_time()[0], setup_current_time()[1], random_number))
             api.update_status(random_number)
+            time.sleep(1)
 
 def main():
     tweet(setup_api())
