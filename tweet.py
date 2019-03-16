@@ -41,7 +41,6 @@ def tweet(api):
     :param api: The Twitter API object
     :type api: Object
     """
-    api.update_status("___Starting___")
     while True:
         if is_new_hour(setup_current_time()):
             random_number = randint(1, 1001)
