@@ -1,7 +1,7 @@
 # Import the Twitter app keys
 from keys import *
 # Import the Twitter API
-import tweepy.API
+import tweepy
 # Import more useful libraries
 import time
 import datetime
