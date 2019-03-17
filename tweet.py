@@ -99,7 +99,7 @@ def tweet(twitter_api, reddit_api, bitly_api):
                 image_url = post.url
                 post_url = shorten_link(post_url, bitly_api)
                 twitter_api.update_with_media(file = BytesIO(requests.get(image_url).content), filename = image_url.split('/')[-1].split('#')[0].split('?')[0], status = "אני_במציאות {}".format(post_url))
-                time.sleep(3655)
+                time.sleep(3555)
                 break
         time.sleep(1)
 
