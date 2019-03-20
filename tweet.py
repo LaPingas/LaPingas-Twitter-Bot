@@ -47,12 +47,12 @@ def choose_post(ani_bm_subreddit):
     post = random.choice(list(hot))
 
     print("Opening and checking file")
-    already_tweeted = open("already_tweeted.txt", "r")
-    already_tweeted_posts = already_tweeted.readlines()
-    while post in already_tweeted_posts:
+
+    while post.id in open("already_tweeted.txt").read() or not contains_image(post):
         print("Choosing a different post")
+        hot = ani_bm_subreddit.hot(limit = 20)
         post = random.choice(list(hot))
-    already_tweeted.close()
+
     already_tweeted = open("already_tweeted.txt", "a")
 
     print("Writing to file")
@@ -61,6 +61,9 @@ def choose_post(ani_bm_subreddit):
     print("Done! Returning to tweeting...")
     already_tweeted.close()
     return post
+
+def contains_image(post):
+    return False if post.is_self or post.selftext != "" else True
 
 def shorten_link(long_url, bitly):
     return bitly.shorten(uri = f"https://reddit.com{long_url}"[:49])["url"]
