@@ -15,8 +15,7 @@ from io import BytesIO
 
 def setup_twitter():
     """
-    Set up the Twitter object
-    :rtype: Object
+    Set up the Twitter object and return the object
     """
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
@@ -24,8 +23,7 @@ def setup_twitter():
 
 def setup_reddit():
     """
-    Set up the Reddit object
-    :rtype: Object
+    Set up the subreddit object and return the object
     """
     reddit = praw.Reddit(client_id = hidden_client_id, client_secret = hidden_client_secret, username = hidden_username, password = hidden_password, user_agent = hidden_user_agent)
     ani_bm_subreddit = reddit.subreddit("ani_bm")
@@ -33,42 +31,43 @@ def setup_reddit():
 
 def setup_bitly():
     """
-    Set up the bit.ly object
-    :rtype: Object
+    Set up the bit.ly object and return the object
     """
     bitly = bitly_api.Connection(access_token = api_key)
     return bitly
 
 def choose_post(ani_bm_subreddit):
-    print(setup_current_time())
-
-    print("Choosing a post")
+    """
+    Choose the post object randomally (while preventing double-posting) and return the object
+    """
+    # Choose the post out of the 20 hottest posts on the subreddit
     hot = ani_bm_subreddit.hot(limit = 20)
     post = random.choice(list(hot))
 
-    print("Opening and checking file")
-
+    # Open the double-post prevent file and check whether or not the post has been already posted
     while post.id in open("already_tweeted.txt").read():
         print("Double-post, choosing a different post")
         hot = ani_bm_subreddit.hot(limit = 20)
         post = random.choice(list(hot))
 
+    # Write the chosen post to the double-post prevent file
     already_tweeted = open("already_tweeted.txt", "a")
-
     print("Writing to file")
     already_tweeted.write("{}\n".format(post))
     
-    print("Done! Returning to tweeting...")
+    # Close the file and return the post
     already_tweeted.close()
     return post
 
 def shorten_link(long_url, bitly):
+    """
+    Gets the URL to shorten and return the shortened URL
+    """
     return bitly.shorten(uri = f"https://reddit.com{long_url}"[:49])["url"]
 
 def setup_current_time():
     """
-    Set up the current time in a list form
-    :rtype: List
+    Set up the current time in a list form and return the list
     """
     current_time = "{}".format(datetime.datetime.now().time())
     hour = current_time[:2]
@@ -79,40 +78,42 @@ def setup_current_time():
 
 def is_new_hour(current_time):
     """
-    Checks if it's a new hour
-    :param current_time: Represent the current time
-    :type current_time: List
+    Check whether or not it's currently a new hour, return True if it is otherwise False
     """
     return True if current_time[1] == "00" and current_time[2] == "00" else False
 
-def tweet(twitter_api, reddit_api, bitly_api):
+def tweet(twitter_api, ani_bm, bitly_api):
     """
-    Tweet
-    :param api: The Twitter API object
-    :type api: Object
+    Tweet 24/7
     """
     while True:
         if is_new_hour(setup_current_time()):
+            # Print current hour
+            print(setup_current_time())
+
+            # Call the post-choosing function
+            post = choose_post(ani_bm)
+            # Call the URL-shortening function and assign it
+            post_url = shorten_link(post.permalink, bitly_api)
+            # Assign the image URL
+            image_url = post.url
+
             while True:
-                post = choose_post(setup_reddit())
-                post_url = post.permalink
-                image_url = post.url
-                post_url = shorten_link(post_url, bitly_api)
+                try: # Try to post
+                    twitter_api.update_with_media(file = BytesIO(requests.get(image_url).content), filename = image_url.split('/')[-1].split('#')[0].split('?')[0], status = f"אני_במציאות {post_url}")
+                    print("Posted")
+                    break
+                except: # Choose a different post if it fails (probably becuase the chosen post does not contain an image)
+                    print("Post does not contain an image, choosing a different post")
+                    post = choose_post(setup_reddit())
+                    post_url = shorten_link(post.permalink, bitly_api)
+                    image_url = post.url
 
-                found_image = False
-                while not found_image:
-                    try:
-                        twitter_api.update_with_media(file = BytesIO(requests.get(image_url).content), filename = image_url.split('/')[-1].split('#')[0].split('?')[0], status = "אני_במציאות {}".format(post_url))
-                        found_image = True
-                    except:
-                        print("Image does not contain an image, choosing a different post")
-                        post = choose_post(setup_reddit())
-                        post_url = post.permalink
-                        image_url = post.url
-                        post_url = shorten_link(post_url, bitly_api)
+            # Sleep for almost an hour
+            time.sleep(3555)
+            # Return to constant hour check for the rest of the hour
 
-                time.sleep(3555)
-                break
+        # Sleep a second after every check
         time.sleep(1)
 
 def main():
