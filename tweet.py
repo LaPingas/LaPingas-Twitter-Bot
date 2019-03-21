@@ -48,8 +48,8 @@ def choose_post(ani_bm_subreddit):
 
     print("Opening and checking file")
 
-    while post.id in open("already_tweeted.txt").read() or not contains_image(post):
-        print("Choosing a different post")
+    while post.id in open("already_tweeted.txt").read():
+        print("Double-post, choosing a different post")
         hot = ani_bm_subreddit.hot(limit = 20)
         post = random.choice(list(hot))
 
@@ -61,9 +61,6 @@ def choose_post(ani_bm_subreddit):
     print("Done! Returning to tweeting...")
     already_tweeted.close()
     return post
-
-def contains_image(post):
-    return False if post.is_self or post.selftext != "" else True
 
 def shorten_link(long_url, bitly):
     return bitly.shorten(uri = f"https://reddit.com{long_url}"[:49])["url"]
@@ -101,7 +98,19 @@ def tweet(twitter_api, reddit_api, bitly_api):
                 post_url = post.permalink
                 image_url = post.url
                 post_url = shorten_link(post_url, bitly_api)
-                twitter_api.update_with_media(file = BytesIO(requests.get(image_url).content), filename = image_url.split('/')[-1].split('#')[0].split('?')[0], status = "אני_במציאות {}".format(post_url))
+
+                found_image = False
+                while not found_image:
+                    try:
+                        twitter_api.update_with_media(file = BytesIO(requests.get(image_url).content), filename = image_url.split('/')[-1].split('#')[0].split('?')[0], status = "אני_במציאות {}".format(post_url))
+                        found_image = True
+                    except:
+                        print("Image does not contain an image, choosing a different post")
+                        post = choose_post(setup_reddit())
+                        post_url = post.permalink
+                        image_url = post.url
+                        post_url = shorten_link(post_url, bitly_api)
+
                 time.sleep(3555)
                 break
         time.sleep(1)
