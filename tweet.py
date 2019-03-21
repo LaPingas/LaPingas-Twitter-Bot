@@ -52,8 +52,7 @@ def choose_post(ani_bm_subreddit):
 
     # Write the chosen post to the double-post prevent file
     already_tweeted = open("already_tweeted.txt", "a")
-    print("Writing to file")
-    already_tweeted.write("{}\n".format(post))
+    already_tweeted.write(f"{post}\n")
     
     # Close the file and return the post
     already_tweeted.close()
