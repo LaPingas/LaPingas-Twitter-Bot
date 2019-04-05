@@ -76,57 +76,42 @@ def shorten_link(long_url, bitly):
     return bitly.shorten(uri=f"https://reddit.com{long_url}"[:49])["url"]
 
 
-def setup_current_time():
-    """
-    Set up the current time in a list form and return the list
-    """
-    current_time = "{}".format(datetime.datetime.now().time())
-    hour = current_time[:2]
-    minute = current_time[3:5]
-    second = current_time[6:8]
-    current_time = [hour, minute, second]
-    return current_time
-
-
-def is_new_hour(current_time):
-    """
-    Check whether or not it's currently a new hour, return True if it is otherwise False
-    """
-    return True if current_time[1] == "00" and current_time[2] == "00" else False
-
-
 def tweet(twitter_api, ani_bm, bitly_api):
     """
     Tweet 24/7
     """
+    # Sleep until next round hour
+    now = datetime.datetime.now()
+    sleep_until = now.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
+    time.sleep((sleep_until - now).seconds)
     while True:
-        if is_new_hour(setup_current_time()):
-            # Print current hour
-            print(setup_current_time())
+        # Print current date/time
+        print(now.isoformat())
 
-            # Call the post-choosing function
-            post = choose_post(ani_bm)
-            # Call the URL-shortening function and assign it
+        # Call the post-choosing function
+        post = choose_post(ani_bm)
+        # Call the URL-shortening function and assign it
+        post_url = shorten_link(post.permalink, bitly_api)
+        # Assign the image URL
+        image_url = post.url
+
+        while post.permalink == post.url:
+            print("Post does not contain an image, choosing a different post")
+            post = choose_post(setup_reddit())
             post_url = shorten_link(post.permalink, bitly_api)
-            # Assign the image URL
             image_url = post.url
 
-            while post.permalink == post.url:
-                print("Post does not contain an image, choosing a different post")
-                post = choose_post(setup_reddit())
-                post_url = shorten_link(post.permalink, bitly_api)
-                image_url = post.url
-
-            twitter_api.update_with_media(file=BytesIO(requests.get(image_url).content),
-                                          filename=image_url.split('/')[-1].split('#')[0].split('?')[0],
-                                          status=f"אני_במציאות {post_url}")
-            print("Posted")
-            # Sleep for almost an hour
-            time.sleep(3555)
-            # Return to constant hour check for the rest of the hour
+        twitter_api.update_with_media(file=BytesIO(requests.get(image_url).content),
+                                      filename=image_url.split('/')[-1].split('#')[0].split('?')[0],
+                                      status=f"אני_במציאות {post_url}")
+        print("Posted")
+        # Sleep for almost an hour
+        # Return to constant hour check for the rest of the hour
 
         # Sleep a second after every check
-        time.sleep(1)
+        now = datetime.datetime.now()
+        sleep_until = now.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
+        time.sleep((sleep_until - now).seconds)
 
 
 def main():
