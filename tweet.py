@@ -1,5 +1,3 @@
-# Import secret credentials
-from credentials import *
 # Import the Twitter API
 import tweepy
 # Import the Reddit API
@@ -11,21 +9,30 @@ import time
 import datetime
 import random
 import requests
+import yaml
 from io import BytesIO
+
+with open("credentials.yaml", "r") as f:
+    credentials = yaml.load(f.read())
+
 
 def setup_twitter():
     """
     Set up the Twitter object and return the object
     """
-    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_token, access_token_secret)
+    auth = tweepy.OAuthHandler(credentials["twitter"]["consumer_key"], credentials["twitter"]["consumer_secret"])
+    auth.set_access_token(credentials["twitter"]["access_token"], credentials["twitter"]["access_token_secret"])
     return tweepy.API(auth)
 
 def setup_reddit():
     """
     Set up the subreddit object and return the object
     """
-    reddit = praw.Reddit(client_id = hidden_client_id, client_secret = hidden_client_secret, username = hidden_username, password = hidden_password, user_agent = hidden_user_agent)
+    reddit = praw.Reddit(client_id=credentials["reddit"]["client_id"],
+                         client_secret=credentials["twitter"]["client_secret"],
+                         username=credentials["twitter"]["username"],
+                         password=credentials["twitter"]["password"],
+                         user_agent=credentials["twitter"]["user_agent"])
     ani_bm_subreddit = reddit.subreddit("ani_bm")
     return ani_bm_subreddit
 
@@ -33,7 +40,7 @@ def setup_bitly():
     """
     Set up the bit.ly object and return the object
     """
-    bitly = bitly_api.Connection(access_token = api_key)
+    bitly = bitly_api.Connection(access_token=credentials["bitly"]["api_key"])
     return bitly
 
 def choose_post(ani_bm_subreddit):
