@@ -111,19 +111,16 @@ def tweet(twitter_api, ani_bm, bitly_api):
             # Assign the image URL
             image_url = post.url
 
-            while True:
-                try:  # Try to post
-                    twitter_api.update_with_media(file=BytesIO(requests.get(image_url).content),
-                                                  filename=image_url.split('/')[-1].split('#')[0].split('?')[0],
-                                                  status=f"אני_במציאות {post_url}")
-                    print("Posted")
-                    break
-                except Exception:  # Choose a different post if it fails (probably becuase the chosen post does not contain an image)
-                    print("Post does not contain an image, choosing a different post")
-                    post = choose_post(setup_reddit())
-                    post_url = shorten_link(post.permalink, bitly_api)
-                    image_url = post.url
+            while post.permalink == post.url:
+                print("Post does not contain an image, choosing a different post")
+                post = choose_post(setup_reddit())
+                post_url = shorten_link(post.permalink, bitly_api)
+                image_url = post.url
 
+            twitter_api.update_with_media(file=BytesIO(requests.get(image_url).content),
+                                          filename=image_url.split('/')[-1].split('#')[0].split('?')[0],
+                                          status=f"אני_במציאות {post_url}")
+            print("Posted")
             # Sleep for almost an hour
             time.sleep(3555)
             # Return to constant hour check for the rest of the hour
