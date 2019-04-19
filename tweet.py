@@ -28,10 +28,10 @@ def setup_reddit():
     Set up the subreddit object and return the object
     """
     reddit = praw.Reddit(client_id=credentials["reddit"]["client_id"],
-                         client_secret=credentials["twitter"]["client_secret"],
-                         username=credentials["twitter"]["username"],
-                         password=credentials["twitter"]["password"],
-                         user_agent=credentials["twitter"]["user_agent"])
+                         client_secret=credentials["reddit"]["client_secret"],
+                         username=credentials["reddit"]["username"],
+                         password=credentials["reddit"]["password"],
+                         user_agent=credentials["reddit"]["user_agent"])
     ani_bm_subreddit = reddit.subreddit("ani_bm")
     return ani_bm_subreddit
 
