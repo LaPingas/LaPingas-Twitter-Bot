@@ -76,7 +76,7 @@ def tweet(twitter_api, ani_bm):
     time.sleep((sleep_until - now).seconds)
     while True:
         # Print current hour
-        print(now.isoformat())
+        print(datetime.datetime.now().time())
 
         # Call the post-choosing function
         post = choose_post(ani_bm)
@@ -96,9 +96,10 @@ def tweet(twitter_api, ani_bm):
                 break
             except Exception: # Choose a different post if it fails (probably becuase the chosen post does not contain an image)
                 print("Post does not contain an image, choosing a different post")
-                post = choose_post(setup_reddit())
+                post = choose_post(ani_bm)
                 post_url = shorten_link(post)
                 image_url = post.url
+                post_title = post.title
 
         now = datetime.datetime.now()
         sleep_until = now.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
