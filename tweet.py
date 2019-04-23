@@ -10,8 +10,9 @@ import requests
 from io import BytesIO
 import yaml
 
-with open("credentials.yaml", "r") as f:
-    credentials = yaml.load(f.read())
+
+with open("credentials.yaml", "r") as c:
+    credentials = yaml.load(c.read(), Loader=yaml.FullLoader)
 
 
 def setup_twitter():
@@ -44,9 +45,12 @@ def choose_post(ani_bm_subreddit):
     hot = ani_bm_subreddit.hot(limit=50)
     post = random.choice(list(hot))
 
-    # Open the double-post prevent file and check whether or not the post has been already posted
-    while post.id in open("already_tweeted.txt").read():
-        print("Double-post, choosing a different post")
+    # 1. Catching double-posts; 2. Catching long-titled posts
+    while post.id in open("already_tweeted.txt").read() or len(post.title) > 265:
+        if len(post.title) > 265:
+            print("Post title is too long, choosing a different post")
+        else:
+            print("Double-post, choosing a different post")
         hot = ani_bm_subreddit.hot(limit=50)
         post = random.choice(list(hot))
 
@@ -94,8 +98,12 @@ def tweet(twitter_api, ani_bm):
                                               status = f"{post_title} {post_url}")
                 print("Posted")
                 break
-            except Exception: # Choose a different post if it fails (probably becuase the chosen post does not contain an image)
-                print("Post does not contain an image, choosing a different post")
+            except Exception as e: # Choose a different post if tweeting fails (probably becuase the chosen post does not contain an image)
+                print("Post does not contain an image or has a long title, choosing a different post")
+                if e.args == ("Invalid file type for image: None",):
+                    print("Post does not contain an image, choosing a different post")
+                else:
+                    print(f"Special error - {e.args}")
                 post = choose_post(ani_bm)
                 post_url = shorten_link(post)
                 image_url = post.url
