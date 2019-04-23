@@ -99,7 +99,6 @@ def tweet(twitter_api, ani_bm):
                 print("Posted")
                 break
             except Exception as e: # Choose a different post if tweeting fails (probably becuase the chosen post does not contain an image)
-                print("Post does not contain an image or has a long title, choosing a different post")
                 if e.args == ("Invalid file type for image: None",):
                     print("Post does not contain an image, choosing a different post")
                 else:
