@@ -9,6 +9,7 @@ import random
 import requests
 from io import BytesIO
 import yaml
+from pypresence import Presence, Activity
 
 
 with open("credentials.yaml", "r") as c:
@@ -36,6 +37,13 @@ def setup_reddit():
     ani_bm_subreddit = reddit.subreddit("ani_bm")
     return ani_bm_subreddit
 
+def setup_discord():
+    """
+    Set up the discord rich presence client
+    """
+    rpc = Presence(credentials["discord"]["client_id"])
+    rpc.connect()
+    return rpc
 
 def choose_post(ani_bm_subreddit):
     """
@@ -70,7 +78,7 @@ def shorten_link(post):
     return f"redd.it/{post.id}"
 
 
-def tweet(twitter_api, ani_bm):
+def tweet(twitter_api, ani_bm, discord):
     """
     Tweet 24/7
     """
@@ -108,13 +116,19 @@ def tweet(twitter_api, ani_bm):
                 image_url = post.url
                 post_title = post.title
 
+        try: # Trying to update Discord Rich Presence
+            discord.update(large_image="large_image", details="Tweeting @ani_bm_bot", state=f"Most recent post: {post_url}")
+        except Exception as e:
+            print(f"Discord Rich Presence update failed - {e.args}")
+
+
         now = datetime.datetime.now()
         sleep_until = now.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
         time.sleep((sleep_until - now).seconds)
 
 
 def main():
-    tweet(setup_twitter(), setup_reddit())
+    tweet(setup_twitter(), setup_reddit(), setup_discord())
 
 
 main()
