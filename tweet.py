@@ -47,11 +47,12 @@ def setup_discord():
 
 def choose_post(ani_bm_subreddit):
     """
-    Choose the post object randomally (while preventing double-posting) and return the object
+    Choose the post object by hottest (while preventing double-posting) and return the object
     """
-    # Choose the post out of the 50 hottest posts on the subreddit
-    hot = ani_bm_subreddit.hot(limit=50)
-    post = random.choice(list(hot))
+    # Choose the hottest post, not posted yet on Twitter
+    i = 1
+    hot = list(ani_bm_subreddit.hot(limit=i))
+    post = hot[i-1]
 
     # 1. Catching double-posts; 2. Catching long-titled posts
     while post.id in open("already_tweeted.txt").read() or len(post.title) > 265:
@@ -59,8 +60,9 @@ def choose_post(ani_bm_subreddit):
             print("Post title is too long, choosing a different post")
         else:
             print("Double-post, choosing a different post")
-        hot = ani_bm_subreddit.hot(limit=50)
-        post = random.choice(list(hot))
+        i += 1
+        hot = list(ani_bm_subreddit.hot(limit=i))
+        post = hot[i-1]
 
     # Write the chosen post to the double-post prevent file
     already_tweeted = open("already_tweeted.txt", "a")
@@ -122,6 +124,11 @@ def tweet(twitter_api, ani_bm, discord):
             print(f"Discord Rich Presence update failed - {e.args}")
 
 
+        #debug
+        '''
+        print("posted")
+        time.sleep(1)
+        '''
         now = datetime.datetime.now()
         sleep_until = now.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
         time.sleep((sleep_until - now).seconds)
